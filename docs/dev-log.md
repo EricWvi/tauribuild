@@ -1,5 +1,81 @@
 # Development Log
 
+## 2026-02-01 - Evening Update
+
+### Fixed GitHub Actions Build Issues & Added APK Signing
+
+Resolved the 403 permission error and implemented automated APK signing in the GitHub Actions workflow.
+
+#### Issues Fixed
+
+**1. GitHub Actions 403 Permission Error**
+- **Problem**: `softprops/action-gh-release@v1` failed with 403 status when attempting to create releases
+- **Root Cause**: Missing write permissions for repository contents
+- **Solution**: Added `permissions: contents: write` to workflow file
+- **File Modified**: [.github/workflows/android-release.yml](.github/workflows/android-release.yml)
+
+**2. Unsigned APK Release**
+- **Problem**: APKs were being released unsigned, unsuitable for distribution
+- **Solution**: Implemented automated signing workflow using GitHub Secrets
+- **Implementation**:
+  - Added keystore setup step to decode base64-encoded keystore from secrets
+  - Sign APK with `jarsigner` using SHA256withRSA algorithm
+  - Align APK with `zipalign` for optimization
+  - Verify signature after signing
+
+#### Workflow Changes
+
+**New Steps Added:**
+1. **Setup Keystore**: Decodes base64 keystore from `ANDROID_KEYSTORE_BASE64` secret
+2. **Sign APK**: Signs using keystore credentials from GitHub secrets
+3. **Upload Signed Artifacts**: Updated to upload signed APK instead of unsigned
+
+**Required GitHub Secrets:**
+- `ANDROID_KEYSTORE_BASE64`: Base64-encoded keystore file
+- `ANDROID_KEYSTORE_PASSWORD`: Keystore password
+- `ANDROID_KEY_PASSWORD`: Key alias password
+- `ANDROID_KEY_ALIAS`: Key alias name (e.g., "release-key")
+
+**Signing Process:**
+```bash
+# Sign APK
+jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+  -keystore release-keystore.jks \
+  app-universal-release-unsigned.apk release-key
+
+# Align APK
+zipalign -v 4 app-universal-release-unsigned.apk app-universal-release.apk
+
+# Verify
+jarsigner -verify -verbose -certs app-universal-release.apk
+```
+
+#### Documentation Updates
+
+Updated [docs/android-build-commands.md](docs/android-build-commands.md) with:
+- Comprehensive keystore generation guide
+- Step-by-step local APK signing instructions
+- GitHub Secrets setup for automated signing
+- Base64 encoding instructions for keystore
+- APK verification commands
+- Enhanced GitHub Actions usage documentation
+
+#### Security Notes
+
+- Signing only occurs on tagged releases (not manual workflow runs without tags)
+- Keystore credentials stored securely in GitHub Secrets
+- Unsigned APKs still available as artifacts for testing
+
+#### Next Steps for Users
+
+To enable signing in your fork/repository:
+1. Generate a release keystore using `keytool`
+2. Encode keystore to base64
+3. Add the 4 required secrets to GitHub repository settings
+4. Push a version tag to trigger signed release build
+
+---
+
 ## 2026-02-01
 
 ### Tauri Android Build Setup - Complete Implementation

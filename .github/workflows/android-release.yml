@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -64,24 +67,43 @@ jobs:
         working-directory: ./client
         run: npm run tauri android build -- --target aarch64
 
+      - name: Setup Keystore
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release-keystore.jks
+          echo "KEYSTORE_PATH=${{ github.workspace }}/release-keystore.jks" >> $GITHUB_ENV
+
+      - name: Sign APK
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          # Sign the APK
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore $KEYSTORE_PATH \
+            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk \
+            "${{ secrets.ANDROID_KEY_ALIAS }}"
+          
+          # Align the APK
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 \
+            client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk \
+            client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          
+          # Verify the signature
+          jarsigner -verify -verbose -certs \
+            client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-arm64
-          path: client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
-
-      - name: Upload AAB Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-aab-arm64
-          path: client/src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab
+          path: client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release*.apk
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
-            client/src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          draft: false
+          prerelease: false
