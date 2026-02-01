@@ -1,5 +1,29 @@
 # Development Log
 
+## 2026-02-01 - Night Update
+
+### Fixed APK Installation Error - Switched to apksigner
+
+**Issue**: APK installation was failing on Android devices with error:
+```
+INSTALL_FAILED_INVALID_APK: Failed to extract native libraries, res=-2
+```
+
+**Root Cause**: The signing process was using the deprecated `jarsigner` tool with incorrect ordering. The workflow was signing first, then aligning, which causes corruption. With `jarsigner`, you must align **before** signing, not after.
+
+**Solution**: Switched to `apksigner` (the modern Android signing tool) which:
+- Handles both signing and alignment automatically in the correct order
+- Uses modern v2/v3 APK signature schemes
+- Is the recommended tool by Google for APK signing
+
+**Files Modified**:
+- [.github/workflows/android-release.yml](.github/workflows/android-release.yml) - Replaced jarsigner/zipalign with apksigner
+- [docs/android-build-commands.md](android-build-commands.md) - Updated documentation with apksigner as recommended method
+
+**Verification**: APK now signs correctly with v2 and v3 signature schemes verified.
+
+---
+
 ## 2026-02-01 - Late Evening Update
 
 ### Fixed Keystore Alias Mismatch in GitHub Actions

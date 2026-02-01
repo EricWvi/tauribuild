@@ -1,13 +1,20 @@
 ## ✅ FIXED: GitHub Actions Build Issues
 
-### Issue 1: Keystore Alias Mismatch ✅
+### Issue 1: APK Installation Failure ✅
+**Problem**: `adb install` was failing with "INSTALL_FAILED_INVALID_APK: Failed to extract native libraries"
+
+**Root Cause**: Using deprecated `jarsigner` tool with wrong order (sign then align). This corrupts the APK. The correct order with jarsigner is: align first, then sign.
+
+**Solution**: Switched to `apksigner` (modern Android tool) which handles both signing and alignment correctly. Updated [.github/workflows/android-release.yml](.github/workflows/android-release.yml#L77) and [android-build-commands.md](android-build-commands.md#L221).
+
+### Issue 2: Keystore Alias Mismatch ✅
 **Problem**: jarsigner was failing with "Certificate chain not found for: release-keystore"
 
 **Root Cause**: The GitHub Actions workflow was using the wrong alias name. The keystore was created with alias `release-key` but the workflow was trying to use `release-keystore`.
 
 **Solution**: Updated [.github/workflows/android-release.yml](.github/workflows/android-release.yml#L85) to use the correct alias `release-key` matching the keystore configuration documented in [android-build-commands.md](android-build-commands.md#L207).
 
-### Issue 2: Deprecated set-output Command ✅
+### Issue 3: Deprecated set-output Command ✅
 **Status**: No action needed - the current workflow doesn't use `set-output` or `save-state` commands.
 
 ## TODO: test tauri build

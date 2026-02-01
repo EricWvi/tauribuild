@@ -217,24 +217,48 @@ keytool -genkey -v -keystore release-keystore.jks \
 
 ### Step 2: Sign APK Locally
 
+#### Option A: Using apksigner (Recommended - Modern Approach)
+
 ```bash
 # Navigate to APK directory
 cd client/src-tauri/gen/android/app/build/outputs/apk/universal/release/
 
-# Sign the APK
-jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-  -keystore /path/to/release-keystore.jks \
-  app-universal-release-unsigned.apk \
-  release-key
+# Sign the APK using apksigner (handles alignment automatically)
+$ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+  --ks /path/to/release-keystore.jks \
+  --ks-key-alias release-key \
+  --out app-universal-release.apk \
+  app-universal-release-unsigned.apk
 
-# Align the APK (optimizes for Android)
+# Verify the signature
+$ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose app-universal-release.apk
+```
+
+#### Option B: Using jarsigner (Legacy Method)
+
+```bash
+# Navigate to APK directory
+cd client/src-tauri/gen/android/app/build/outputs/apk/universal/release/
+
+# IMPORTANT: Align BEFORE signing with jarsigner
 $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 \
   app-universal-release-unsigned.apk \
-  app-universal-release.apk
+  app-universal-release-aligned.apk
+
+# Sign the aligned APK
+jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+  -keystore /path/to/release-keystore.jks \
+  app-universal-release-aligned.apk \
+  release-key
+
+# Rename for consistency
+mv app-universal-release-aligned.apk app-universal-release.apk
 
 # Verify the signature
 jarsigner -verify -verbose -certs app-universal-release.apk
 ```
+
+**Note**: `apksigner` is the recommended tool as it handles alignment automatically and is the modern Android signing tool.
 
 ### Step 3: Setup GitHub Secrets for Automated Signing
 
