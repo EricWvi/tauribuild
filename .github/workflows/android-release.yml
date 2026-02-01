@@ -82,7 +82,7 @@ jobs:
             -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}" \
             client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk \
-            "${{ secrets.ANDROID_KEY_ALIAS }}"
+            release-keystore
           
           # Align the APK
           $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 \
