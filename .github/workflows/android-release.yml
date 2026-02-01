@@ -77,7 +77,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Sign and align the APK using apksigner (modern approach)
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+          $ANDROID_HOME/build-tools/36.0.0/apksigner sign \
             --ks $KEYSTORE_PATH \
             --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
@@ -86,7 +86,7 @@ jobs:
             client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
           
           # Verify the signature
-          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose \
+          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose \
             client/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
 
       - name: Upload APK Artifact

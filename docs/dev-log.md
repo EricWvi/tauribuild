@@ -1,5 +1,22 @@
 # Development Log
 
+## 2026-02-01 - Android SDK Upgrade to Version 36
+
+### Updated Android SDK from 34 to 36
+
+**Changes Implemented**:
+- Updated `compileSdk` from 34 to 36 in [client/src-tauri/gen/android/app/build.gradle.kts](client/src-tauri/gen/android/app/build.gradle.kts#L16)
+- Updated `targetSdk` from 34 to 36 in [client/src-tauri/gen/android/app/build.gradle.kts](client/src-tauri/gen/android/app/build.gradle.kts#L29)
+- Updated build-tools version from 34.0.0 to 36.0.0 in [.github/workflows/android-release.yml](.github/workflows/android-release.yml) for apksigner
+
+**Files Modified**:
+- [client/src-tauri/gen/android/app/build.gradle.kts](client/src-tauri/gen/android/app/build.gradle.kts) - Updated compileSdk and targetSdk
+- [.github/workflows/android-release.yml](.github/workflows/android-release.yml) - Updated build-tools version for APK signing
+
+**Testing**: Verified that Vite dev server starts successfully without errors.
+
+---
+
 ## 2026-02-01 - Night Update
 
 ### Fixed APK Installation Error - Switched to apksigner
