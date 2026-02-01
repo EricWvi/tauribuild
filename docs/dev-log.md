@@ -1,5 +1,28 @@
 # Development Log
 
+## 2026-02-01 - Late Evening Update
+
+### Fixed Keystore Alias Mismatch in GitHub Actions
+
+**Issue**: GitHub Actions build was failing during APK signing with error:
+```
+jarsigner: Certificate chain not found for: release-keystore.
+release-keystore must reference a valid KeyStore key entry containing 
+a private key and corresponding public key certificate chain.
+```
+
+**Root Cause**: The jarsigner command was using the wrong alias name. The keystore was created with alias `release-key` (as documented in android-build-commands.md), but the workflow was trying to sign with alias `release-keystore`.
+
+**Solution**: Updated [.github/workflows/android-release.yml](.github/workflows/android-release.yml#L85) to use the correct alias `release-key`.
+
+**Files Modified**:
+- [.github/workflows/android-release.yml](.github/workflows/android-release.yml) - Changed jarsigner alias from `release-keystore` to `release-key`
+- [docs/todo.md](todo.md) - Marked build issue as resolved
+
+**Note**: The deprecated `set-output` warning mentioned in the todo was not applicable - the current workflow doesn't use this deprecated command.
+
+---
+
 ## 2026-02-01 - Evening Update
 
 ### Fixed GitHub Actions Build Issues & Added APK Signing
